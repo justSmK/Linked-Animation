@@ -6,6 +6,5 @@
 - [ ] Когда отпускаем слайдер, анимация идет до конца с текущего места.
 - [ ] Слева и справа отступы layout margins. Отступ как для квадратной вью, так и для слайдера.
 
-
-Uploading Screen Recording 2023-03-06 at 15.28.14.mov…
+https://user-images.githubusercontent.com/28645140/236682016-ebddad24-3c0e-48b2-9176-2f7c5f95daa8.mov
 
