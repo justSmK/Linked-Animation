@@ -9,76 +9,55 @@ import UIKit
 
 class ViewController: UIViewController {
     
-    private let sideOfSquare: CGFloat = 128
-    private let scale: CGFloat = 1.5
-    private let propertyAnimator = UIViewPropertyAnimator(duration: 0.4, curve: .easeInOut)
+    let movingView = UIView()
+    let sliderControl = UISlider()
     
-    private lazy var squareView: UIView = {
-        let view = UIView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = .link
-        view.layer.cornerRadius = 12
-        view.clipsToBounds = true
-        return view
-    }()
+    let animator = UIViewPropertyAnimator(duration: 0.7, curve: .easeOut)
     
-    private lazy var sliderView: UISlider = {
-        let slider = UISlider()
-        slider.translatesAutoresizingMaskIntoConstraints = false
-        slider.addTarget(self, action: #selector(sliderValueChanged), for: .valueChanged)
-        slider.addTarget(self, action: #selector(sliderReleased), for: .touchUpInside)
-        return slider
-    }()
-
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
-        setConstraints()
-        launchAnimation()
-    }
-    
-    private func launchAnimation() {
-        propertyAnimator.pausesOnCompletion = true
-        propertyAnimator.addAnimations { [weak self] in
-            guard let self else { return }
-            let transform = CGAffineTransform(scaleX: scale, y: scale)
-            self.squareView.transform = CGAffineTransform(rotationAngle: .pi / 2).concatenating(transform)
-//            let bounds = self.squareView.frame.applying(transform)
-//            squareView.center.x = view.bounds.width - bounds.midX
-            let finalPosition = view.frame.width - ((squareView.center.x * 1.5) - view.layoutMargins.right / 2)
-            squareView.center.x = finalPosition
+        
+        movingView.backgroundColor = .systemBlue
+        movingView.layer.cornerCurve = .continuous
+        movingView.layer.cornerRadius = 8
+        view.addSubview(movingView)
+        
+        view.addSubview(sliderControl)
+        
+        sliderControl.addAction(.init(handler: {_ in
+            self.animator.fractionComplete = CGFloat(self.sliderControl.value)
+        }), for: .valueChanged)
+        
+        sliderControl.addAction(.init(handler: {_ in
+            self.animator.startAnimation()
+            self.sliderControl.setValue(1, animated: true)
+        }), for: [.touchUpInside, .touchUpOutside])
+        
+        animator.pausesOnCompletion = true
+        
+        animator.addAnimations {
+            self.movingView.frame.origin.x = self.view.frame.width - self.view.layoutMargins.right - self.view.layoutMargins.right - self.movingView.frame.width
+            self.movingView.transform = .identity.scaledBy(x: 1.5, y: 1.5).rotated(by: .pi / 2)
         }
     }
-
-    @objc private func sliderValueChanged() {
-        propertyAnimator.fractionComplete = CGFloat(sliderView.value)
+    
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
+        
+        if movingView.transform == .identity {
+            movingView.frame = .init(x: view.layoutMargins.left, y: 110, width: 80, height: 80)
+            
+            sliderControl.sizeToFit()
+            sliderControl.frame = .init(
+                x: view.layoutMargins.left,
+                y: movingView.frame.maxY + 44,
+                width: view.frame.width - view.layoutMargins.left - view.layoutMargins.right,
+                height: sliderControl.frame.height
+            )
+        }
+        
+        
     }
     
-    @objc private func sliderReleased() {
-        sliderView.setValue(1.0, animated: true)
-        propertyAnimator.startAnimation()
-    }
-}
-
-
-extension ViewController {
-    private func setConstraints() {
-        
-        view.addSubview(squareView)
-        let squareViewConstraints: [NSLayoutConstraint] = [
-            squareView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
-            squareView.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor, constant: 60),
-            squareView.heightAnchor.constraint(equalToConstant: sideOfSquare),
-            squareView.widthAnchor.constraint(equalToConstant: sideOfSquare)
-        ]
-        NSLayoutConstraint.activate(squareViewConstraints)
-        
-        view.addSubview(sliderView)
-        let sliderConstraints: [NSLayoutConstraint] = [
-            sliderView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
-            sliderView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
-            sliderView.topAnchor.constraint(equalTo: squareView.layoutMarginsGuide.bottomAnchor, constant: 60)
-        ]
-        NSLayoutConstraint.activate(sliderConstraints)
-    }
 }
